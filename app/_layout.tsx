@@ -50,6 +50,13 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerTitleAlign: 'center' }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="otp"
+          options={{
+            headerTitle: 'Enter Your Phone Number',
+            headerBackVisible: false,
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );
