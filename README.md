@@ -10,6 +10,6 @@ Additional features:
 - [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) for gestures
 - [Gifted Chat](https://github.com/FaridSafi/react-native-gifted-chat) for chat UI
 
-## Credit
+## Sources and References
 
 -  Galaxies-dev <https://github.com/Galaxies-dev/whatsapp-clone-react-native>
