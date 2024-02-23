@@ -1,5 +1,5 @@
-import { StyleSheet } from "react-native";
-import Colors from "./Colors";
+import { StyleSheet } from 'react-native';
+import Colors from './Colors';
 
 export const defaultStyles = StyleSheet.create({
   block: {
@@ -13,6 +13,7 @@ export const defaultStyles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     gap: 10,
+    backgroundColor: '#fff',
   },
   separator: {
     height: StyleSheet.hairlineWidth,

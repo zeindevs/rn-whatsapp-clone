@@ -1,7 +1,7 @@
 import { Image, StyleSheet, TouchableOpacity } from 'react-native';
 
-import { Text, View } from '@/components/Themed';
 import welcomeImage from '@/assets/images/welcome.png';
+import { Text, View } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { Link } from 'expo-router';
 

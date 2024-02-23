@@ -1,19 +1,27 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Linking,
   Platform,
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaskInput from 'react-native-mask-input';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text, View } from '@/components/Themed';
 import Colors from '@/constants/Colors';
+import { useWarmUpBrowser } from '@/hooks/useWarmUpBrowser';
+import {
+  isClerkAPIResponseError,
+  useOAuth,
+  useSignIn,
+  useSignUp,
+} from '@clerk/clerk-expo';
 
 const GER_PHONE = [
   '+',
@@ -39,11 +47,15 @@ const GER_PHONE = [
 ];
 
 const Page = () => {
+  useWarmUpBrowser();
   const [loading, setLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const router = useRouter();
   const keyboardVerticalOffset = Platform.OS === 'ios' ? 90 : 0;
   const { bottom } = useSafeAreaInsets();
+  const { signUp } = useSignUp();
+  const { signIn } = useSignIn();
+  const { startOAuthFlow: googleAuth } = useOAuth({ strategy: 'oauth_google' });
 
   const openLink = () => {
     Linking.openURL('https://galaxies.dev');
@@ -51,17 +63,65 @@ const Page = () => {
 
   const sendOTP = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await signUp!.create({
+        phoneNumber,
+      });
+
+      signUp!.preparePhoneNumberVerification();
+
       router.push(`/verify/${phoneNumber}`);
-    }, 2000);
+    } catch (err) {
+      if (isClerkAPIResponseError(err)) {
+        if (err.errors[0].code === 'form_identifier_exists') {
+          console.log('user exists');
+          await trySignIn();
+        } else {
+          setLoading(false);
+          Alert.alert('Error', err.errors[0].message);
+        }
+      }
+    }
   };
 
-  const trySignIn = async () => {};
+  const trySignIn = async () => {
+    const { supportedFirstFactors } = await signIn!.create({
+      identifier: phoneNumber,
+    });
+
+    const firstPhoneFactor: any = supportedFirstFactors.find((factor) => {
+      return factor.strategy === 'phone_code';
+    });
+
+    const { phoneNumberId } = firstPhoneFactor;
+
+    await signIn!.prepareFirstFactor({
+      strategy: 'phone_code',
+      phoneNumberId,
+    });
+
+    router.push(`/verify/${phoneNumber}?signin=true`);
+    setLoading(false);
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { createdSessionId, setActive } = await googleAuth();
+      console.log('session id:', createdSessionId);
+
+      if (!createdSessionId) {
+        setActive!({ session: createdSessionId });
+        router.replace('/(tabs)/chats');
+      }
+    } catch (err) {
+      console.error('could authenticate OAuth: ', err);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
+      behavior="padding"
       keyboardVerticalOffset={keyboardVerticalOffset}
     >
       <View style={styles.container}>
@@ -110,6 +170,19 @@ const Page = () => {
           </Text>
         </Text>
 
+        <View style={{ width: '100%' }}>
+          <TouchableOpacity
+            style={[styles.button, styles.enabled]}
+            onPress={signInWithGoogle}
+          >
+            <Text
+              style={[styles.buttonText, styles.enabledText, { fontSize: 18 }]}
+            >
+              Sign In with Google
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={{ flex: 1 }} />
 
         <TouchableOpacity
@@ -124,7 +197,7 @@ const Page = () => {
           <Text
             style={[
               styles.buttonText,
-              phoneNumber !== '' ? styles.enabled : null,
+              phoneNumber !== '' ? styles.enabledText : null,
             ]}
           >
             Next
@@ -188,6 +261,9 @@ const styles = StyleSheet.create({
   },
   enabled: {
     backgroundColor: Colors.light.primary,
+    color: '#fff',
+  },
+  enabledText: {
     color: '#fff',
   },
   buttonText: {
