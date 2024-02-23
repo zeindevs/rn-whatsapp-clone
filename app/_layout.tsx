@@ -6,13 +6,14 @@ import {
   ThemeProvider,
 } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Link, Stack, useRouter, useSegments } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
 import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -35,7 +36,7 @@ const tokenCache = {
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+  ErrorBoundary
 } from 'expo-router';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -100,6 +101,23 @@ const InitialLayout = () => {
           }}
         />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(modals)/new-chat"
+          options={{
+            presentation: 'modal',
+            title: 'New Chat',
+            // headerTransparent: true,
+            headerShadowVisible: false,
+            headerBlurEffect: 'regular',
+            headerStyle: {
+              backgroundColor: Colors.light.background,
+            },
+            headerSearchBarOptions: {
+              placeholder: 'Search name or number',
+              hideWhenScrolling: false,
+            },
+          }}
+        />
       </Stack>
     </ThemeProvider>
   );
